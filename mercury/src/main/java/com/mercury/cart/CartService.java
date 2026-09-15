@@ -4,8 +4,10 @@ import com.mercury.customer.Customer;
 import com.mercury.customer.CustomerService;
 import com.mercury.product.Product;
 import com.mercury.product.ProductService;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
+import java.beans.Transient;
 import java.util.Optional;
 
 @Service
@@ -25,6 +27,7 @@ public class CartService {
         this.productService = productService;
     }
 
+    @Transactional(rollbackOn =  Exception.class)
     public CartResponse addToCart(Long customerId, AddToCartRequest request) {
         Customer customer = customerService.getCustomer(customerId);
         Cart cart = getOrCreateCart(customer);
@@ -46,12 +49,14 @@ public class CartService {
         return CartMapper.toCartResponse(cart);
     }
 
+    @Transactional(rollbackOn =  Exception.class)
     public CartResponse getCart(Long customerId) {
         Customer customer = customerService.getCustomer(customerId);
         Cart cart = getOrCreateCart(customer);
         return CartMapper.toCartResponse(cart);
     }
 
+    @Transactional(rollbackOn =  Exception.class)
     public CartResponse removeItemFromCart(Long customerId, Long productId) {
         Customer customer = customerService.getCustomer(customerId);
         Cart cart = getCartOrThrow(customer);
@@ -66,6 +71,7 @@ public class CartService {
         return CartMapper.toCartResponse(cart);
     }
 
+    @Transactional(rollbackOn =  Exception.class)
     public CartResponse updateItemInCart(Long customerId, CartItemsUpdateRequest request) {
         if (request.getDelta() == 0) {
             throw new InvalidDeltaException("Delta cannot be zero which does absolutely nothing. Please provide a delta of -1 or 1 to decrease or increase the quantity respectively.");
