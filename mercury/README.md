@@ -14,6 +14,7 @@ It was built from the ground up as a learning-by-building project, with every de
 - **BCrypt** — password hashing
 - **Maven** — build/dependency management
 - **Postman** — manual API testing throughout development
+- **Redis** — optional caching layer for future performance improvements
 
 ## Architecture
 

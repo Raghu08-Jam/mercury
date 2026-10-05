@@ -5,6 +5,8 @@ import com.mercury.customer.CustomerService;
 import com.mercury.product.Product;
 import com.mercury.product.ProductService;
 import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.beans.Transient;
@@ -16,6 +18,8 @@ public class CartService {
     private final CartItemRepository cartItemRepository;
     private final CustomerService customerService;
     private final ProductService productService;
+
+    private static final Logger logger = LoggerFactory.getLogger(CartService.class);
 
     public CartService(CartRepository cartRepository,
                        CartItemRepository cartItemRepository,
@@ -63,17 +67,20 @@ public class CartService {
         Product product = productService.getProduct(productId);
         Optional<CartItem> optionalCartItem = cartItemRepository.findByCartAndProduct(cart, product);
         if (optionalCartItem.isEmpty()) {
+            logger.atWarn().log("attempted to remove a item from cart which does not exist in the current cart by customer of id : {}", customerId);
             throw new CartItemNotFoundException("Cart item not found for product with ID: " + productId);
         }
         CartItem cartItem = optionalCartItem.get();
         cart.getCartItems().remove(cartItem);
         cartItemRepository.delete(cartItem);
+        logger.atInfo().log("removed item of id : {} from cart for cart id {}", cartItem.getId(), cart.getId());
         return CartMapper.toCartResponse(cart);
     }
 
     @Transactional(rollbackOn =  Exception.class)
     public CartResponse updateItemInCart(Long customerId, CartItemsUpdateRequest request) {
         if (request.getDelta() == 0) {
+            logger.atWarn().log("attempted to update cart item with a delta of zero which does nothing for customer of id : {}", customerId);
             throw new InvalidDeltaException("Delta cannot be zero which does absolutely nothing. Please provide a delta of -1 or 1 to decrease or increase the quantity respectively.");
         }
         Customer customer = customerService.getCustomer(customerId);
@@ -81,6 +88,7 @@ public class CartService {
         Product product = productService.getProduct(request.getProductId());
         Optional<CartItem> optionalCartItem = cartItemRepository.findByCartAndProduct(cart, product);
         if (optionalCartItem.isEmpty()) {
+            logger.atWarn().log("attempted to update a cart item which does not exist for customer of id : {}", customerId);
             throw new CartItemNotFoundException("Cart item not found for product with ID: " + request.getProductId());
         }
         CartItem cartItem = optionalCartItem.get();
@@ -91,6 +99,7 @@ public class CartService {
         }
         cartItem.setQuantity(cartItem.getQuantity() + request.getDelta());
         cartItemRepository.save(cartItem);
+        logger.atInfo().log("updated item of id : {} in cart for cart id {}", cartItem.getId(), cart.getId());
         return CartMapper.toCartResponse(cart);
     }
 

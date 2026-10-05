@@ -35,7 +35,10 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         String token = authHeader.substring(7);
         if (jwtService.isTokenValid(token)) {
             Long customerId = jwtService.extractCustomerId(token);
-            UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(customerId, null, List.of(new SimpleGrantedAuthority("ROLE_" + jwtService.extractRole(token))));
+            UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                    customerId,
+                    null,
+                    List.of(new SimpleGrantedAuthority("ROLE_" + jwtService.extractRole(token))));
             SecurityContextHolder.getContext().setAuthentication(authToken);
         }
         filterChain.doFilter(request, response);

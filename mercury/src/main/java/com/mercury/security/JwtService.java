@@ -15,7 +15,7 @@ public class JwtService {
     @Value("${jwt.secret}")
     private String secretKey;
 
-    Long expirationTime = 1000L * 60L * 60L * 10L; // 10 hours in milliseconds
+    Long expirationTime = 1000L * 60L * 60L; // 1 hour in milliseconds
 
     public String generateToken(Long customerId, String email, String role) {
         return Jwts
@@ -24,7 +24,7 @@ public class JwtService {
                 .claim("role", role)
                 .subject(email)
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + expirationTime)) // Token valid for 10 hours
+                .expiration(new Date(System.currentTimeMillis() + expirationTime)) // Token valid for 1 hour
                 .signWith(getSigningKey())
                 .compact();
 

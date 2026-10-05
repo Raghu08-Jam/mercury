@@ -7,6 +7,8 @@ import com.mercury.customer.Customer;
 import com.mercury.customer.CustomerService;
 import com.mercury.product.ProductService;
 import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -20,6 +22,7 @@ public class OrderService {
     private final ProductService productService;
     private final CustomerService customerService;
 
+    private static final Logger logger = LoggerFactory.getLogger(OrderService.class);
 
     public OrderService(OrderRepository orderRepository,
                         CartService cartService,
@@ -34,7 +37,9 @@ public class OrderService {
     @Transactional(rollbackOn = Exception.class)
     public OrderResponse placeOrder(Long customerId) {
         Cart cart = cartService.getCartEntity(customerId);
+        logger.atInfo().log("Attempting to place order for customer with ID: {}", customerId);
         if (cart.getCartItems().isEmpty()) {
+            logger.atWarn().log("Cart is empty for customer with ID: {}. Cannot place order.", customerId);
             throw new CartEmptyException("Cart is empty. Cannot place order.");
         }
         Order order = new Order();
@@ -55,12 +60,15 @@ public class OrderService {
                 .map(item -> item.getPriceAtPurchase().multiply(BigDecimal.valueOf(item.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add));
         orderRepository.save(order);
+        logger.atInfo().log("Placed order for customer with ID: {}", customerId);
         cartService.clearCart(cart.getCustomer().getId());
+        logger.atInfo().log("cart cleared for customer with ID: {} after placing the order", customerId);
         return OrderMapper.toOrderResponse(order);
     }
 
     public List<OrderResponse> getOrdersByCustomerId(Long customerId) {
         Customer customer = customerService.getCustomer(customerId);
+        logger.atInfo().log("fetching orders for customer with ID: {}", customerId);
         return orderRepository.findByCustomer(customer)
                 .stream()
                 .map(OrderMapper::toOrderResponse)
@@ -68,6 +76,7 @@ public class OrderService {
     }
 
     public Order getOrder(Long orderId) {
+        logger.atInfo().log("fetching order with ID: {}", orderId);
         return orderRepository.findById(orderId)
                 .orElseThrow(() ->new OrderNotFoundException("Order not found with id:" + orderId));
     }
