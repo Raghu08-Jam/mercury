@@ -81,4 +81,15 @@ public class ProductService {
         logger.atInfo().log("Updated price for product with id: {}, new price: {} [an admin only feature]", productId, newPrice);
         return response;
     }
+
+    public ProductResponse updateProductStock(ProductUpdateRequest request) {
+        Long productId = request.getProductId();
+        Long newStockQuantity = request.getNewStockQuantity();
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ProductNotFoundException("Product not found with the id: " + productId));
+        product.setStockQuantity(newStockQuantity);
+        ProductResponse response = ProductMapper.toResponse(productRepository.save(product));
+        logger.atInfo().log("Updated stock quantity for product with id: {}, new stock quantity: {} [an admin only feature]", productId, newStockQuantity);
+        return response;
+    }
 }

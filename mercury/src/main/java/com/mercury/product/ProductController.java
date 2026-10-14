@@ -40,4 +40,9 @@ public class ProductController {
         productService.reduceStocks(id, quantity);
         return ResponseEntity.status(HttpStatus.OK).build();
     }
+
+    @PatchMapping("/products/update-stock")
+    public ResponseEntity<ProductResponse> updateProductStock(@Valid @RequestBody ProductUpdateRequest productUpdateRequest) {
+        return ResponseEntity.status(HttpStatus.OK).body(productService.updateProductStock(productUpdateRequest));
+    }
 }
